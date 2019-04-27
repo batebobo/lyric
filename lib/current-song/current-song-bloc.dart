@@ -1,5 +1,5 @@
 import 'package:bloc/bloc.dart';
-import 'package:lyric/auth/genius-song-client.dart';
+import 'package:lyric/services/genius-song-client.dart';
 import 'package:lyric/models/song.dart';
 import 'package:lyric/services/spotify-user-client.dart';
 import 'package:optional/optional.dart';

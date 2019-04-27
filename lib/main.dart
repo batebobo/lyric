@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lyric/auth/spotify-auth-bloc.dart';
 import 'package:lyric/models/song.dart';
-import 'package:lyric/services/current-song-bloc.dart';
+import 'package:lyric/current-song/current-song-bloc.dart';
 import 'package:lyric/services/spotify-user-client.dart';
 import 'package:optional/optional.dart';
 import 'package:rxdart/rxdart.dart';
