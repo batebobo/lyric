@@ -1,6 +1,8 @@
 import 'package:lyric/auth/spotify-auth-client.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:bloc/bloc.dart';
+import 'package:lyric/services/spotify-user-client.dart';
+import 'package:meta/meta.dart';
 import 'package:uni_links/uni_links.dart';
 
 abstract class SpotifyAuthState { }
@@ -21,13 +23,16 @@ class WithToken extends SpotifyAuthState {
 
 abstract class SpotifyAuthEvent { }
 
-class RequestAuthorizationCode extends SpotifyAuthEvent { }
+class RequestAuthorizationCode extends SpotifyAuthEvent {
+  final bool force;
+
+  RequestAuthorizationCode({ @required this.force });
+}
 
 class RequestAuthorizationToken extends SpotifyAuthEvent { }
 
 class SpotifyAuthBloc extends Bloc<SpotifyAuthEvent, SpotifyAuthState> {
   final spotifyAuthClient = SpotifyAuthClient();
-
 
   @override
   SpotifyAuthState get initialState => NotInitialized();
@@ -37,7 +42,7 @@ class SpotifyAuthBloc extends Bloc<SpotifyAuthEvent, SpotifyAuthState> {
     final store = FlutterSecureStorage();
     String token = await store.read(key: 'spotify_token');
     if (event is RequestAuthorizationCode) {
-      if (token != null) {
+      if (token != null && !event.force) {
         yield WithToken(token: token);
       } 
       else {

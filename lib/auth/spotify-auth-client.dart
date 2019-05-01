@@ -14,10 +14,10 @@ class SpotifyAuthClient {
   final String clientSecret = 'd52ca4718e7048d58d4dc9a3a82c64ff';
 
   void addParameters() {
+    final scopes = Uri.encodeComponent('user-read-playback-state user-read-recently-played');
     url +=
-        '?client_id=$clientId&response_type=code&redirect_uri=$redirectUrl&scope=user-read-playback-state';
+        '?client_id=$clientId&response_type=code&redirect_uri=$redirectUrl&scope=$scopes';
   }
-
 
   Future<Null> issueInitialRequest() async {
     addParameters();
@@ -78,7 +78,6 @@ class SpotifyAuthClient {
     final storage = FlutterSecureStorage();
     final refToken = await storage.read(key: 'spotify_refresh_token');
     if (refToken == null) {
-      await storage.delete(key: 'spotify_token');
       await storage.delete(key: 'spotify_refresh_token');
       return null;
     }
