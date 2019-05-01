@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:lyric/models/song.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/dom.dart';

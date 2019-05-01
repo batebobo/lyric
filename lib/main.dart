@@ -26,11 +26,10 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  SpotifyAuthBloc spotifyAuthBloc;
+  SpotifyAuthBloc spotifyAuthBloc = SpotifyAuthBloc();
 
   @override
   void initState() {
-    spotifyAuthBloc = SpotifyAuthBloc();
     spotifyAuthBloc.dispatch(RequestAuthorizationToken());
     super.initState();
   }
@@ -41,24 +40,26 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      bloc: spotifyAuthBloc,
-      child: BlocBuilder(
+    return Scaffold(
+      body: BlocProvider(
         bloc: spotifyAuthBloc,
-        builder: (BuildContext context, SpotifyAuthState state) {
-          if (state is NotInitialized || state is WithAuthorizationCode) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Text('Authenticating'),
-                CupertinoActivityIndicator(animating: true, radius: 40)
-              ],
-            );
-          } else if (state is WithToken) {
-            return HomePage(token: state.token);
-          }
-        },
+        child: BlocBuilder(
+          bloc: spotifyAuthBloc,
+          builder: (BuildContext context, SpotifyAuthState state) {
+            if (state is NotInitialized) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Text('Authenticating'),
+                  CupertinoActivityIndicator(animating: true, radius: 40)
+                ],
+              );
+            } else if (state is WithToken) {
+              return HomePage(token: state.token);
+            }
+          },
+        ),
       ),
     );
   }

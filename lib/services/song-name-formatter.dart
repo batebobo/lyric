@@ -8,13 +8,17 @@ class SongNameFormatter {
    return '.+?(?=((- | \\()\\s*\\d*\\s*$stuff\\s*\\d*))' ;
   }
 
+  String _remove(String search, { String from }) {
+    return RegExp(_ignore(search), caseSensitive: false).stringMatch(from);
+  }
+
   String ignoreMisleadingSuffixes() {
     final name = song.name;
     final matches = [
-      RegExp(_ignore('live'), caseSensitive: false).stringMatch(name),
-      RegExp(_ignore('acoustic'), caseSensitive: false).stringMatch(name),
-      RegExp(_ignore('single'), caseSensitive: false).stringMatch(name),
-      RegExp(_ignore('remastered'), caseSensitive: false).stringMatch(name)
+      _remove('live', from: name),
+      _remove('acoustic', from: name),
+      _remove('single', from: name),
+      _remove('remastered', from: name),
     ];
 
     final nonEmptyMatches = matches.where((match) => match != null);

@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lyric/blocs/last-songs-bloc.dart';
-import 'package:lyric/blocs/spotify-auth-bloc.dart';
 import 'package:lyric/models/song.dart';
 import 'package:lyric/widgets/single-song.dart';
 
@@ -15,13 +14,15 @@ class LastSongsList extends StatelessWidget {
   List<Widget> _songsWidgets(List<Song> songs, BuildContext context) {
     return songs
         .map((song) => ListTile(
-          onTap: () => Navigator.push(context,
+          onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
               builder: (context) => SingleSong(song)
             )),
-            leading: CircleAvatar(
-              radius: 30,
-              backgroundImage: NetworkImage(
+            contentPadding: EdgeInsets.only(left: 0, right: 20),
+            leading: Image(
+              height: 80,
+              width: 80,
+              image: NetworkImage(
                 song.albumCoverUrl,
               ),
             ),
@@ -29,11 +30,15 @@ class LastSongsList extends StatelessWidget {
               width: MediaQuery.of(context).size.width - 100,
               child: Padding(
                 padding: const EdgeInsets.only(left: 10.0),
-                child: Text(song.name,
-                    style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 23,
-                        fontWeight: FontWeight.bold)),
+                child: Text(
+                  song.name,
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
               ),
             ),
             subtitle: Container(
@@ -41,7 +46,7 @@ class LastSongsList extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.only(left: 10.0),
                 child: Text(song.artist,
-                    style: TextStyle(color: Colors.black, fontSize: 20)),
+                    style: TextStyle(color: Colors.black, fontSize: 17)),
               ),
             )))
         .toList();

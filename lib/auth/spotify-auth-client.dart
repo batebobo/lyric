@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'package:uni_links/uni_links.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SpotifyAuthClient {
@@ -13,20 +14,20 @@ class SpotifyAuthClient {
 
   final String clientSecret = 'd52ca4718e7048d58d4dc9a3a82c64ff';
 
-  void addParameters() {
+  void _addParameters() {
     final scopes = Uri.encodeComponent('user-read-playback-state user-read-recently-played');
     url +=
         '?client_id=$clientId&response_type=code&redirect_uri=$redirectUrl&scope=$scopes';
   }
 
-  Future<Null> issueInitialRequest() async {
-    addParameters();
+  Future<Null> _issueInitialRequest() async {
+    _addParameters();
     if (await canLaunch(url)) {
       await launch(url);
     }
   }
 
-  Future<String> issueTokenRequest(String receivedCode) async {
+  Future<String> _issueTokenRequest(String receivedCode) async {
     final Map<String, String> requestBody = {
       'grant_type': 'authorization_code',
       'code': receivedCode,
@@ -46,12 +47,11 @@ class SpotifyAuthClient {
     final token = body['access_token'];
     final refreshToken = body['refresh_token'];
     final storage = FlutterSecureStorage();
-    await storage.write(key: 'spotify_token', value: token);
     await storage.write(key: 'spotify_refresh_token', value: refreshToken);
     return token;
   }
 
-  Future<String> refreshToken(String refreshToken) async {
+  Future<String> _refreshToken(String refreshToken) async {
     final body = {
         'grant_type': 'refresh_token',
         'refresh_token': refreshToken,
@@ -62,11 +62,16 @@ class SpotifyAuthClient {
     final headers = {
       'Authorization': 'Basic $code'
     };
+    final storage = FlutterSecureStorage();
+
 
     final response = await http.post('https://accounts.spotify.com/api/token', headers: headers, body: body);
     final responseBody = json.decode(response.body);
+    if (response.statusCode == 400) {
+      await storage.delete(key: 'spotify_refresh_token');
+      return _completeFlow();
+    }
     final newRefreshToken = responseBody['refresh_token'];
-    final storage = FlutterSecureStorage();
     if (newRefreshToken != null) {
       await storage.write(key: 'spotify_refresh_token', value: newRefreshToken);
     }
@@ -74,14 +79,21 @@ class SpotifyAuthClient {
     return newToken;
   }
 
-  Future<String> reauthenticate() async {
+  Future<String> _completeFlow() async {
+    await _issueInitialRequest();
+    final uri = await getUriLinksStream().first;
+    final code = uri.queryParameters['code'];
+    return _issueTokenRequest(code);
+  }
+
+  Future<String> authenticate() async {
     final storage = FlutterSecureStorage();
     final refToken = await storage.read(key: 'spotify_refresh_token');
     if (refToken == null) {
       await storage.delete(key: 'spotify_refresh_token');
-      return null;
+      return _completeFlow();
     }
 
-    return refreshToken(refToken);
+    return _refreshToken(refToken);
   }
 }

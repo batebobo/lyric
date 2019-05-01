@@ -32,7 +32,7 @@ class SpotifyUserClient {
     Response response = await http.get(url, headers: headers);
     if (response.statusCode == 401) {
       final authClient = SpotifyAuthClient();
-      token = await authClient.reauthenticate();
+      token = await authClient.authenticate();
       headers = { 'Authorization': 'Bearer $token' };
       response = await http.get(url, headers: headers);
     }
@@ -50,7 +50,7 @@ class SpotifyUserClient {
     LastTracksResponse output = LastTracksResponse();
     final body = json.decode(response.body);
     if (body['error'] != null && body['error']['status'] == 401) {
-      token = await SpotifyAuthClient().reauthenticate();
+      token = await SpotifyAuthClient().authenticate();
       headers['Authorization'] = 'Bearer $token';
       response = await http.get(url, headers: headers);
     } if (body['error'] != null && body['error']['status'] == 403) {
