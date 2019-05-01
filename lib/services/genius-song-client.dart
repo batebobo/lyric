@@ -4,14 +4,17 @@ import 'package:lyric/models/song.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/dom.dart';
 import 'package:html/parser.dart' show parse;
+import 'package:lyric/services/song-name-formatter.dart';
 import 'package:optional/optional.dart';
 
 class GeniusSongClient {
   final String _accessToken = '1SEb2FUswZQckU-AFer41vm1MHUWBWpNdKJMuf1bjydx0lMjLZPrfUEK0Llb5Pkl';
 
   Future<Optional<String>> getSongLyrics(Song song) async {
+    final formatter = SongNameFormatter(song);
     final String artist = song.artist;
-    final String name = song.name.split('(').first;
+    String name = song.name.split('(').first;
+    name = formatter.ignoreMisleadingSuffixes();
     final String url = 'https://api.genius.com/search?q=$artist-$name';
     final headers = { 'Authorization': 'Bearer $_accessToken' };
 
