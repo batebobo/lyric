@@ -12,14 +12,13 @@ class SongNameFormatter {
     return RegExp(_ignore(search), caseSensitive: false).stringMatch(from);
   }
 
+  List<String> _removeAll(List<String> search, { String from }) {
+    return search.map((item) => _remove(item, from: from)).toList();
+  }
+
   String ignoreMisleadingSuffixes() {
     final name = song.name;
-    final matches = [
-      _remove('live', from: name),
-      _remove('acoustic', from: name),
-      _remove('single', from: name),
-      _remove('remastered', from: name),
-    ];
+    final matches = _removeAll(['live', 'acoustic', 'single', 'remastered'], from: name);
 
     final nonEmptyMatches = matches.where((match) => match != null);
 

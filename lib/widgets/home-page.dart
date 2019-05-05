@@ -33,7 +33,8 @@ class _HomePageState extends State<HomePage> {
         BlocProvider<CurrentSongBloc>(
             bloc: CurrentSongBloc(spotifyClient: userClient)),
         BlocProvider<LastSongsBloc>(
-            bloc: LastSongsBloc(BlocProvider.of<SpotifyAuthBloc>(context), spotifyClient: userClient))
+            bloc: LastSongsBloc(BlocProvider.of<SpotifyAuthBloc>(context),
+                spotifyClient: userClient))
       ],
       child: DefaultTextStyle(
           style: TextStyle(decoration: TextDecoration.none),
@@ -41,11 +42,16 @@ class _HomePageState extends State<HomePage> {
               child: CupertinoTabScaffold(
             tabBuilder: (BuildContext context, int index) {
               if (index == 0) {
-                return CurrentSong(
-                    currentSongBloc: BlocProvider.of<CurrentSongBloc>(context));
+                return CupertinoTabView(
+                  builder: (BuildContext context) => CurrentSong(
+                      currentSongBloc:
+                          BlocProvider.of<CurrentSongBloc>(context)),
+                );
               } else if (index == 1) {
-                return LastSongsList(
-                    lastSongsBloc: BlocProvider.of<LastSongsBloc>(context));
+                return CupertinoTabView(
+                  builder: (BuildContext context) => LastSongsList(
+                      lastSongsBloc: BlocProvider.of<LastSongsBloc>(context)),
+                );
               }
               return Center(
                   child: Text("Not implemented",

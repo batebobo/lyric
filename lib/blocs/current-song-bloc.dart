@@ -21,13 +21,7 @@ class CurrentSongBloc extends Bloc<RequestSongEvent, Optional<Song>> {
 
   @override
   Stream<Optional<Song>> mapEventToState(RequestSongEvent event) async* {
-    final song = await spotifyClient.getCurrentTrack();
-
-    bool hasTheSongChanged = Optional.ofNullable(song) != currentState;
-
-    if (hasTheSongChanged) {
-      song.lyrics = await geniusSongClient.getSongLyrics(song);
-    }
-    yield Optional.ofNullable(song);
+    final newSong = await spotifyClient.getCurrentTrack();
+    yield Optional.ofNullable(newSong);
   }
 }
