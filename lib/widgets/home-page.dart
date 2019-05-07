@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lyric/blocs/current-song-bloc.dart';
-import 'package:lyric/blocs/genius-hit-selection-bloc.dart';
 import 'package:lyric/blocs/last-songs-bloc.dart';
 import 'package:lyric/blocs/spotify-auth-bloc.dart';
 import 'package:lyric/services/spotify-user-client.dart';
@@ -36,8 +35,6 @@ class _HomePageState extends State<HomePage> {
         BlocProvider<LastSongsBloc>(
             bloc: LastSongsBloc(BlocProvider.of<SpotifyAuthBloc>(context),
                 spotifyClient: userClient)),
-        BlocProvider<GeniusHitSelectionBloc>(
-          bloc: GeniusHitSelectionBloc())
       ],
       child: DefaultTextStyle(
           style: TextStyle(decoration: TextDecoration.none),

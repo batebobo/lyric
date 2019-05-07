@@ -1,12 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lyric/blocs/genius-hit-selection-bloc.dart';
 import 'package:lyric/models/genius-hit.dart';
+import 'package:lyric/models/lyrics-data.dart';
 import 'package:lyric/models/song.dart';
-import 'package:lyric/services/genius-song-client.dart';
+import 'package:lyric/services/genius-lyrics-client.dart';
 import 'package:lyric/widgets/genius-hits-list.dart';
 import 'package:lyric/widgets/loading.dart';
+import 'package:optional/optional.dart';
 
 class SongScreen extends StatefulWidget {
   final Song song;
@@ -18,8 +18,8 @@ class SongScreen extends StatefulWidget {
 }
 
 class _SongScreenState extends State<SongScreen> {
-  Future<Song> lyricsFetch;
-  final geniusClient = GeniusSongClient();
+  Future<Optional<LyricsData>> lyricsFetch;
+  final geniusClient = GeniusLyricsClient();
   static const loading = Loading(radius: 40);
 
   @override
@@ -44,24 +44,16 @@ class _SongScreenState extends State<SongScreen> {
             textAlign: TextAlign.center),
       );
 
-  Widget _lyrics(Song song) => song.lyrics.isPresent
-      ? _lyricsWidget(song.lyrics.value)
+  Widget _lyrics(Song song) => song.lyricsData.isPresent
+      ? _lyricsWidget(song.lyrics)
       : FutureBuilder(
           future: lyricsFetch,
-          builder:
-              (BuildContext context, AsyncSnapshot<Song> snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.done:
-                return snapshot.hasData && snapshot.data.lyrics.isPresent
-                    ? _lyricsWidget(snapshot.data.lyrics.value)
-                    : loading;
-                break;
-              case ConnectionState.active:
-              case ConnectionState.waiting:
-                return loading;
-              default:
-                return Center(child: Text("Error"));
-            }
+          builder: (BuildContext context, AsyncSnapshot<Optional<LyricsData>> snapshot) {
+              if (snapshot.connectionState == ConnectionState.done && snapshot.hasData && snapshot.data.isPresent) {
+                widget.song.lyricsData = snapshot.data;
+                return _lyricsWidget(snapshot.data.value.lyrics);
+              }
+              return loading;
           },
         );
 
@@ -95,17 +87,23 @@ class _SongScreenState extends State<SongScreen> {
       return CupertinoPopupSurface(
         isSurfacePainted: true,
         child: GeniusHitsList(
-            hits: song.geniusHits.value,
-            bloc: BlocProvider.of<GeniusHitSelectionBloc>(parentContext))
-      );
+            hits: song.lyricsData.value.geniusHits,
+            selectedUrl: song.lyricsData.value.lyricsUrl
+      ));
     }, context: parentContext
     ).then((GeniusHit hit) async {
       final newLyrics = await geniusClient.parseHtml(hit.url);
-      final newSong = song
-        ..lyrics = newLyrics;
-      setState(() {
-        lyricsFetch = Future.value(newSong);
-      });
+      final lyricsData = Optional.of(LyricsData(
+        geniusHits: song.lyricsData.value.geniusHits,
+        lyrics: newLyrics.value,
+        lyricsUrl: hit.url
+      ));
+      if (mounted) {
+        widget.song.lyricsData = lyricsData;
+        setState(() {
+          lyricsFetch = Future.value(lyricsData);
+        });
+      }
     })
   );
 

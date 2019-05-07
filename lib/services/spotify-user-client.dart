@@ -39,7 +39,7 @@ class SpotifyUserClient {
     var decodedBody = json.decode(response.body);
     var item = decodedBody['item'];
     final song = _getSongFromSpotifyResponse(item);
-    song.lyrics = Optional.empty();
+    song.lyricsData = Optional.empty();
     return song;
   }
 

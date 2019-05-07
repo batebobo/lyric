@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
-import 'package:lyric/services/genius-song-client.dart';
+import 'package:lyric/services/genius-lyrics-client.dart';
 import 'package:lyric/models/song.dart';
 import 'package:lyric/services/spotify-user-client.dart';
 import 'package:meta/meta.dart';
@@ -12,7 +12,7 @@ class CurrentSongBloc extends Bloc<RequestSongEvent, Optional<Song>> {
   @override
   Optional<Song> get initialState => Optional.empty();
 
-  final GeniusSongClient geniusSongClient = GeniusSongClient();
+  final GeniusLyricsClient geniusSongClient = GeniusLyricsClient();
   SpotifyUserClient spotifyClient;
 
   CurrentSongBloc({ @required SpotifyUserClient spotifyClient }) {
