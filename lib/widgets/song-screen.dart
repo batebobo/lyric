@@ -1,9 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lyric/blocs/genius-hit-selection-bloc.dart';
+import 'package:lyric/models/genius-hit.dart';
 import 'package:lyric/models/song.dart';
 import 'package:lyric/services/genius-song-client.dart';
+import 'package:lyric/widgets/genius-hits-list.dart';
 import 'package:lyric/widgets/loading.dart';
-import 'package:optional/optional.dart';
 
 class SongScreen extends StatefulWidget {
   final Song song;
@@ -15,7 +18,7 @@ class SongScreen extends StatefulWidget {
 }
 
 class _SongScreenState extends State<SongScreen> {
-  Future<Optional<String>> lyricsFetch;
+  Future<Song> lyricsFetch;
   final geniusClient = GeniusSongClient();
   static const loading = Loading(radius: 40);
 
@@ -46,11 +49,11 @@ class _SongScreenState extends State<SongScreen> {
       : FutureBuilder(
           future: lyricsFetch,
           builder:
-              (BuildContext context, AsyncSnapshot<Optional<String>> snapshot) {
+              (BuildContext context, AsyncSnapshot<Song> snapshot) {
             switch (snapshot.connectionState) {
               case ConnectionState.done:
-                return snapshot.hasData && snapshot.data.isPresent
-                    ? _lyricsWidget(snapshot.data.value)
+                return snapshot.hasData && snapshot.data.lyrics.isPresent
+                    ? _lyricsWidget(snapshot.data.lyrics.value)
                     : loading;
                 break;
               case ConnectionState.active:
@@ -85,6 +88,27 @@ class _SongScreenState extends State<SongScreen> {
         textAlign: TextAlign.center,
       );
 
+  Widget _wrongLyricsButton(Song song, BuildContext parentContext) => CupertinoButton(
+    child: Text('Wrong lyrics?'),
+    color: Colors.blue,
+    onPressed: () => showCupertinoDialog<GeniusHit>(builder: (BuildContext context) {
+      return CupertinoPopupSurface(
+        isSurfacePainted: true,
+        child: GeniusHitsList(
+            hits: song.geniusHits.value,
+            bloc: BlocProvider.of<GeniusHitSelectionBloc>(parentContext))
+      );
+    }, context: parentContext
+    ).then((GeniusHit hit) async {
+      final newLyrics = await geniusClient.parseHtml(hit.url);
+      final newSong = song
+        ..lyrics = newLyrics;
+      setState(() {
+        lyricsFetch = Future.value(newSong);
+      });
+    })
+  );
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -95,6 +119,7 @@ class _SongScreenState extends State<SongScreen> {
         _picture(widget.song),
         _name(widget.song.name),
         _artist(widget.song.artist),
+        _wrongLyricsButton(widget.song, context),
         _lyrics(widget.song),
       ],
     ));

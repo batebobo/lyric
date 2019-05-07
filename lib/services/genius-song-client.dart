@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:lyric/models/genius-hit.dart';
 import 'package:lyric/models/song.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/dom.dart';
@@ -9,7 +10,7 @@ import 'package:optional/optional.dart';
 class GeniusSongClient {
   final String _accessToken = '1SEb2FUswZQckU-AFer41vm1MHUWBWpNdKJMuf1bjydx0lMjLZPrfUEK0Llb5Pkl';
 
-  Future<Optional<String>> getSongLyrics(Song song) async {
+  Future<Song> getSongLyrics(Song song) async {
     final formatter = SongNameFormatter(song);
     final String artist = song.artist;
     String name = song.name.split('(').first;
@@ -19,15 +20,22 @@ class GeniusSongClient {
 
     final response = await http.get(url, headers: headers);
     if (response.statusCode == 401) {
-      return Optional.empty();
+      return song;
     }
     final body = json.decode(response.body);
     final List<dynamic> hits = body['response']['hits'];
     if (hits.length < 1) {
-      return Optional.empty();
+      return song;
     }
     final String path = hits[0]['result']['path'];
-    return parseHtml(path);
+    final newSong = song;
+    newSong.geniusHits = Optional.of(hits.map((hit) => GeniusHit(
+      imageUrl: hit['result']['song_art_image_thumbnail_url'],
+      title: hit['result']['full_title'],
+      url: hit['result']['path']
+    )).toList());
+    newSong.lyrics = await parseHtml(path);
+    return newSong;
   }
 
   String getAllText(Element node) {
