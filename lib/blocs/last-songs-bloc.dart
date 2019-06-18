@@ -12,7 +12,7 @@ class RequestLastSongsEvent {
 
 abstract class LastSongsState { }
 
-class None extends LastSongsState { }
+class Loading extends LastSongsState { }
 
 class Some extends LastSongsState {
   final List<Song> songs;
@@ -26,7 +26,7 @@ class LastSongsBloc extends Bloc<RequestLastSongsEvent, LastSongsState> {
   final SpotifyAuthBloc spotifyAuthBloc;
 
   @override
-  LastSongsState get initialState => None();
+  LastSongsState get initialState => Loading();
 
   SpotifyUserClient _userClient;
 

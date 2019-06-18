@@ -1,9 +1,9 @@
-import 'package:lyric/models/genius-hit.dart';
+import 'package:lyric/models/genius-lyrics-model.dart';
 
 class LyricsData {
   final String lyrics;
-  final List<GeniusHit> geniusHits;
+  final List<GeniusLyricsModel> geniusLyricsModels;
   final String lyricsUrl;
 
-  LyricsData({this.lyrics, this.geniusHits, this.lyricsUrl});
+  LyricsData({this.lyrics, this.geniusLyricsModels, this.lyricsUrl});
 }

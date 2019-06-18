@@ -55,7 +55,7 @@ class _CurrentSongState extends State<CurrentSong> {
         builder: (BuildContext context, Optional<Song> song) =>
           song.isPresent ?
             SongScreen(song: song.value) :
-            loading
+            Text('song failed to load')
     );
   }
 }

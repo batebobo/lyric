@@ -60,7 +60,7 @@ class LastSongsList extends StatelessWidget {
       builder: (BuildContext context, LastSongsState state) {
         if (state is Some) {
           return Scaffold(body: ListView(children: _songsWidgets(state.songs, context)));
-        } else if (state is None) {
+        } else if (state is Loading) {
           return CupertinoActivityIndicator(animating: true, radius: 60);
         } else if (state is Unauthorized) {
           return Center(child: Text('Authorizing'));

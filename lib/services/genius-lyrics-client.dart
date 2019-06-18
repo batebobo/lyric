@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:lyric/models/genius-hit.dart';
+import 'package:lyric/models/genius-lyrics-model.dart';
 import 'package:lyric/models/lyrics-data.dart';
 import 'package:lyric/models/song.dart';
 import 'package:http/http.dart' as http;
@@ -28,30 +28,25 @@ class GeniusLyricsClient {
     if (hits.length < 1) {
       return song.lyricsData;
     }
-    final String path = hits[0]['result']['path'];
-    final newSong = song;
-    final geniusHits = Optional.of(hits.map((hit) => GeniusHit(
-      imageUrl: hit['result']['song_art_image_thumbnail_url'],
-      title: hit['result']['full_title'],
-      url: hit['result']['path']
-    )).toList());
-    final lyrics = await parseHtml(path);
-    if (!lyrics.isPresent || !geniusHits.isPresent) {
+    final String path = GeniusLyricsModel.fromJson(hits[0]).url;
+    final geniusLyricsModels = Optional.of(hits.map((json) => GeniusLyricsModel.fromJson(json)).toList());
+    final lyrics = await getSongLyricsFromUrl(path);
+    if (!lyrics.isPresent || !geniusLyricsModels.isPresent) {
       return song.lyricsData;
     }
     return Optional.of(LyricsData(
-      geniusHits: geniusHits.value,
+      geniusLyricsModels: geniusLyricsModels.value,
       lyrics: lyrics.value,
-      lyricsUrl: geniusHits.value.first.url
+      lyricsUrl: geniusLyricsModels.value.first.url
     ));
   }
 
-  String getAllText(Element node) {
+  String _getAllText(Element node) {
     return node.nodes.fold('', (String result, Node childNode) {
       return result + childNode.text;
     });
   }
-  Future<Optional<String>> parseHtml(String path) async {
+  Future<Optional<String>> getSongLyricsFromUrl(String path) async {
     final String url = 'https://genius.com$path';
     final response = await http.get(url);
 
@@ -60,7 +55,7 @@ class GeniusLyricsClient {
     if (lyricsNodes.length == 0) {
       return Optional.empty();
     }
-    final String text = getAllText(lyricsNodes.first);
+    final String text = _getAllText(lyricsNodes.first);
     return Optional.of(text);
   }
 }

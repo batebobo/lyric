@@ -16,10 +16,6 @@ class LastTracksResponse {
 class UnauthorizedError extends Error { }
 
 class SpotifyUserClient {
-  Song _getSongFromSpotifyResponse(Map<String, dynamic> item) {
-    return Song(name: item['name'], artist: item['artists'][0]['name'], albumCoverUrl: item['album']['images'][0]['url']);
-  }
-
   SpotifyUserClient({ String token }) {
     this.token = token;
   }
@@ -37,8 +33,8 @@ class SpotifyUserClient {
       response = await http.get(url, headers: headers);
     }
     var decodedBody = json.decode(response.body);
-    var item = decodedBody['item'];
-    final song = _getSongFromSpotifyResponse(item);
+    var songJson = decodedBody['item'];
+    final song = Song.fromJson(songJson);
     song.lyricsData = Optional.empty();
     return song;
   }
@@ -58,7 +54,7 @@ class SpotifyUserClient {
       return output;
     }
     final List<dynamic> items = body['items'];
-    output.songs = items.map((item) => _getSongFromSpotifyResponse(item['track'])).toList();
+    output.songs = items.map((item) => Song.fromJson(item['track'])).toList();
     return output;
   }
 }

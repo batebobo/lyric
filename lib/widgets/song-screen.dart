@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lyric/models/genius-hit.dart';
+import 'package:lyric/models/genius-lyrics-model.dart';
 import 'package:lyric/models/lyrics-data.dart';
 import 'package:lyric/models/song.dart';
 import 'package:lyric/services/genius-lyrics-client.dart';
@@ -44,8 +44,8 @@ class _SongScreenState extends State<SongScreen> {
             textAlign: TextAlign.center),
       );
 
-  Widget _lyrics(Song song) => song.lyricsData.isPresent
-      ? _lyricsWidget(song.lyrics)
+  Widget _lyrics() => widget.song.lyricsData.isPresent
+      ? _lyricsWidget(widget.song.lyrics)
       : FutureBuilder(
           future: lyricsFetch,
           builder: (BuildContext context, AsyncSnapshot<Optional<LyricsData>> snapshot) {
@@ -57,54 +57,67 @@ class _SongScreenState extends State<SongScreen> {
           },
         );
 
-  Widget _picture(Song song) => Padding(
+  Widget _picture() => Padding(
         padding: const EdgeInsets.only(top: 20.0),
         child: Image.network(
-          song.albumCoverUrl,
+          widget.song.albumCoverUrl,
           height: MediaQuery.of(context).size.height / 3,
           width: MediaQuery.of(context).size.width,
           alignment: Alignment.center,
         ),
       );
 
-  Widget _name(String name) => Text(
-        '$name',
+  Widget _name() => Text(
+        '${widget.song.name}',
         style: TextStyle(
             color: Colors.black, fontWeight: FontWeight.bold, fontSize: 28),
         textAlign: TextAlign.center,
       );
 
-  Widget _artist(String artist) => Text(
-        '$artist',
+  Widget _artist() => Text(
+        '${widget.song.artist}',
         style: TextStyle(color: Colors.black, fontSize: 21),
         textAlign: TextAlign.center,
       );
 
-  Widget _wrongLyricsButton(Song song, BuildContext parentContext) => CupertinoButton(
-    child: Text('Wrong lyrics?'),
-    color: Colors.blue,
-    onPressed: () => showCupertinoDialog<GeniusHit>(builder: (BuildContext context) {
+  Future<GeniusLyricsModel> _showWrongLyricsDialog(BuildContext parentContext) {
+    if (!widget.song.lyricsData.isPresent) {
+      return Future.value(null);
+    }
+    return showCupertinoDialog<GeniusLyricsModel>(builder: (BuildContext context) {
       return CupertinoPopupSurface(
         isSurfacePainted: true,
-        child: GeniusHitsList(
-            hits: song.lyricsData.value.geniusHits,
-            selectedUrl: song.lyricsData.value.lyricsUrl
-      ));
-    }, context: parentContext
-    ).then((GeniusHit hit) async {
-      final newLyrics = await geniusClient.parseHtml(hit.url);
-      final lyricsData = Optional.of(LyricsData(
-        geniusHits: song.lyricsData.value.geniusHits,
-        lyrics: newLyrics.value,
-        lyricsUrl: hit.url
-      ));
-      if (mounted) {
-        widget.song.lyricsData = lyricsData;
-        setState(() {
-          lyricsFetch = Future.value(lyricsData);
-        });
-      }
-    })
+        child: GeniusLyricsModelsList(
+            models: widget.song.lyricsData.value.geniusLyricsModels,
+            selectedUrl: widget.song.lyricsData.value.lyricsUrl
+        ));
+      }, context: parentContext
+    );
+  }
+
+  void _updateSongLyrics(GeniusLyricsModel lyricsModel) async {
+    if (lyricsModel == null) {
+      return;
+    }
+    final newLyrics = await geniusClient.getSongLyricsFromUrl(lyricsModel.url);
+    final lyricsData = Optional.of(LyricsData(
+      geniusLyricsModels: widget.song.lyricsData.value.geniusLyricsModels,
+      lyrics: newLyrics.value,
+      lyricsUrl: lyricsModel.url
+    ));
+    if (mounted) {
+      widget.song.lyricsData = lyricsData;
+      setState(() {
+        lyricsFetch = Future.value(lyricsData);
+      });
+    }
+  }
+
+  Widget _wrongLyricsButton(BuildContext parentContext) => CupertinoButton(
+    child: Text('Wrong lyrics?'),
+    color: Colors.blue,
+    onPressed: () => _showWrongLyricsDialog(parentContext)
+      .then(_updateSongLyrics)
   );
 
   @override
@@ -114,11 +127,11 @@ class _SongScreenState extends State<SongScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: <Widget>[
-        _picture(widget.song),
-        _name(widget.song.name),
-        _artist(widget.song.artist),
-        _wrongLyricsButton(widget.song, context),
-        _lyrics(widget.song),
+        _picture(),
+        _name(),
+        _artist(),
+        _wrongLyricsButton(context),
+        _lyrics(),
       ],
     ));
   }
